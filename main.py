@@ -11,12 +11,19 @@ import random
 import redis
 import uuid
 
+RABBIT_HOST  = os.getenv("RABBIT_HOST")
+RABBIT_PORT  = os.getenv("RABBIT_PORT")
+REDIS_HOST   = os.getenv("REDIS_HOST")
+REDIS_PORT   = os.getenv("REDIS_PORT")
+SERVICE_HOST = os.getenv("SERVICE_HOST") or "0.0.0.0"
+SERVICE_PORT = os.getenv("SERVICE_PORT") or "4000"
+
 class StockMessagePublisher:
     def __init__(self):
         self.connection = pika.BlockingConnection(
             pika.ConnectionParameters(
-                host=os.getenv("RABBIT_HOST"),
-                port=os.getenv("RABBIT_PORT"),
+                host=RABBIT_HOST,
+                port=RABBIT_PORT,
                 # NOTE: I'm disabling heartbeat entirely because its not
                 # relevant to what i'm trying to achieve here
                 heartbeat=0,
@@ -40,7 +47,7 @@ class StockMessagePublisher:
 app       = Flask(__name__)
 
 publisher = StockMessagePublisher()
-database  = redis.Redis(host=os.getenv("REDIS_HOST"), port=os.getenv("REDIS_PORT"), db=0)
+database  = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=0)
 
 @app.route("/api/health", methods=["GET"])
 def health(): return { "status": "ok" }
@@ -84,5 +91,5 @@ if __name__ == "__main__":
             "expose_headers": "*"
         }
     })
-    serve(app, host=os.getenv("STOCK_API_SERVICE_HOST") or "0.0.0.0", port=os.getenv("STOCK_API_SERVICE_PORT") or "4000")
+    serve(app, host=SERVICE_HOST, port=SERVICE_PORT)
     publisher.close()
