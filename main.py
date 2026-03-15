@@ -19,7 +19,8 @@ SERVICE_HOST = os.getenv("SERVICE_HOST") or "0.0.0.0"
 SERVICE_PORT = os.getenv("SERVICE_PORT") or "4000"
 
 class StockMessagePublisher:
-    def __init__(self):
+    def __init__(self, queueName):
+        self.queueName = queueName
         self.connection = pika.BlockingConnection(
             pika.ConnectionParameters(
                 host=RABBIT_HOST,
@@ -30,7 +31,7 @@ class StockMessagePublisher:
             ),
         )
         self.channel = self.connection.channel()
-        self.channel.queue_declare(queue="stock-message-queue")
+        self.channel.queue_declare(queue=self.queueName)
 
     def publish_request(self, tickers):
         id = random.randint(1000, 9999)
@@ -38,15 +39,14 @@ class StockMessagePublisher:
             "id": id,
             "data": tickers
         })
-        self.channel.basic_publish(exchange="", routing_key="stock-message-queue", body=body)
+        self.channel.basic_publish(exchange="", routing_key=self.queueName, body=body)
         return id
 
-    def close(self):
-        self.connection.close()
+    def stop(self): self.connection.close()
 
 app       = Flask(__name__)
 
-publisher = StockMessagePublisher()
+publisher = StockMessagePublisher(queueName="stock-message-queue")
 database  = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=0)
 
 @app.route("/api/health", methods=["GET"])
@@ -92,4 +92,4 @@ if __name__ == "__main__":
         }
     })
     serve(app, host=SERVICE_HOST, port=SERVICE_PORT)
-    publisher.close()
+    publisher.stop()
