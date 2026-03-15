@@ -60,13 +60,11 @@ def get_stock():
     if not data or not isinstance(data, list): return { "error": "tickers array required" }, 400
 
     market = request.args.get("market")
-
-    tickers = (
+    id = publisher.publish_request(
         data
             | Map(lambda param: param + (f".{market}" if market else ""))
             | Pipe(list)
     )
-    id = publisher.publish_request(tickers)
     entry = { "id": id, "status": "submitted" }
     database.set(id, json.dumps({ **entry, "result": None }))
 
