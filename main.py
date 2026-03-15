@@ -65,10 +65,8 @@ def get_stock():
             | Map(lambda param: param + (f".{market}" if market else ""))
             | Pipe(list)
     )
-    entry = { "id": id, "status": "submitted" }
-    database.set(id, json.dumps({ **entry, "result": None }))
 
-    return entry, 202
+    return { "id": id, "status": "submitted" }, 202
 
 @app.route("/api/stocks/lookup/<request_id>/status", methods=["GET"])
 def get_stock_status(request_id):
