@@ -84,14 +84,18 @@ def get_stock_status(request_id):
     }
 
 if __name__ == "__main__":
-    with open("origins.txt", "r") as file:
-        origins = []
-        for origin in file:
-            origins.append(origin.strip())
+    corsOrigins = []
+
+    try:
+        with open("cors_origins.txt", "r") as file:
+            for origin in file:
+                corsOrigins.append(origin.strip())
+    except:
+        print("[WARN] cors_origins.txt not found!")
 
     CORS(app, resources={
         r"/api/*": {
-            "origins": origins,
+            "origins": corsOrigins,
             "allow_headers": "*",
             "expose_headers": "*"
         }
