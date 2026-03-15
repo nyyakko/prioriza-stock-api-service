@@ -41,7 +41,7 @@ publisher = StockMessagePublisher()
 database  = redis.Redis(host=os.getenv("REDIS_HOST"), port=os.getenv("REDIS_PORT"), db=0)
 
 @app.route("/api/health", methods=["GET"])
-def health(): return { "status": "OK" }
+def health(): return { "status": "ok" }
 
 @app.route("/api/stocks/lookup", methods=["POST"])
 def get_stock():
