@@ -55,7 +55,7 @@ def get_stock():
 
     tickers = (
         data
-            | Map(lambda param: param + f".{market}" if market else "")
+            | Map(lambda param: param + (f".{market}" if market else ""))
             | Pipe(list)
     )
     id = publisher.publish_request(tickers)
