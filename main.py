@@ -84,12 +84,18 @@ def get_stock_status(request_id):
     }
 
 if __name__ == "__main__":
+    with open("origins.txt", "r") as file:
+        origins = []
+        for origin in file:
+            origins.append(origin.strip())
+
     CORS(app, resources={
         r"/api/*": {
-            "origins": "http://localhost:5173",
+            "origins": origins,
             "allow_headers": "*",
             "expose_headers": "*"
         }
     })
+
     serve(app, host=SERVICE_HOST, port=SERVICE_PORT)
     publisher.stop()
