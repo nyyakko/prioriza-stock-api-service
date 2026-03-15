@@ -7,6 +7,7 @@ from yfinance import Tickers
 import json
 import os
 import pika
+import random
 import redis
 import uuid
 
@@ -25,7 +26,7 @@ class StockMessagePublisher:
         self.channel.queue_declare(queue="stock-message-queue")
 
     def publish_request(self, tickers):
-        id = str(uuid.uuid4())
+        id = random.randint(1000, 9999)
         body = json.dumps({
             "id": id,
             "data": tickers
