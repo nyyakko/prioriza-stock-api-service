@@ -49,10 +49,10 @@ app       = Flask(__name__)
 publisher = StockMessagePublisher(queueName="stock-message-queue")
 database  = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=0)
 
-@app.route("/api/health", methods=["GET"])
+@app.route("/health", methods=["GET"])
 def health(): return { "status": "ok" }
 
-@app.route("/api/stocks/lookup", methods=["POST"])
+@app.route("/stocks/lookup", methods=["POST"])
 def get_stock():
     body = request.get_json()
     data = body.get("tickers")
@@ -68,7 +68,7 @@ def get_stock():
 
     return { "id": id, "status": "submitted" }, 202
 
-@app.route("/api/stocks/lookup/<request_id>/status", methods=["GET"])
+@app.route("/stocks/lookup/<request_id>/status", methods=["GET"])
 def get_stock_status(request_id):
     data = database.get(request_id)
     if data is None: return { "error": "lookup request not found" }, 404
