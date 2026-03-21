@@ -60,12 +60,12 @@ class StockMessagePublisher:
 app = Flask(__name__)
 publisher = StockMessagePublisher(queueName="stock-message-queue")
 
-def signal_term_handler(_signum, _frame):
+def signal_handler(_signum, _frame):
     print("[WARN] Terminating application...")
     sys.exit()
 
-signal.signal(signal.SIGTERM, signal_term_handler)
-signal.signal(signal.SIGINT, signal_term_handler)
+signal.signal(signal.SIGTERM, signal_handler)
+signal.signal(signal.SIGINT, signal_handler)
 
 @app.route("/health", methods=["GET"])
 def health(): return { "status": "ok" }
