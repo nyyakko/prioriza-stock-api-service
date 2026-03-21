@@ -9,22 +9,35 @@ import os
 import pika
 import random
 import redis
+import signal
 import uuid
 
-RABBIT_HOST  = os.getenv("RABBIT_HOST")
-RABBIT_PORT  = os.getenv("RABBIT_PORT")
-REDIS_HOST   = os.getenv("REDIS_HOST")
-REDIS_PORT   = os.getenv("REDIS_PORT")
-SERVICE_HOST = os.getenv("SERVICE_HOST") or "0.0.0.0"
-SERVICE_PORT = os.getenv("SERVICE_PORT") or "4000"
+worker = {
+    "config": {
+        "host": os.getenv("SERVICE_HOST") or "0.0.0.0",
+        "port": os.getenv("SERVICE_PORT") or "4000",
+    },
+    "services": {
+        "rabbit": {
+            "host": os.getenv("RABBIT_HOST"),
+            "port": os.getenv("RABBIT_PORT")
+        },
+        "redis": {
+            "host": os.getenv("REDIS_HOST"),
+            "port": os.getenv("REDIS_PORT")
+        }
+    },
+}
+
+database = redis.Redis(host=worker["services"]["redis"]["host"], port=worker["services"]["redis"]["port"], db=0)
 
 class StockMessagePublisher:
     def __init__(self, queueName):
         self.queueName = queueName
         self.connection = pika.BlockingConnection(
             pika.ConnectionParameters(
-                host=RABBIT_HOST,
-                port=RABBIT_PORT,
+                host=worker["services"]["rabbit"]["host"],
+                port=worker["services"]["rabbit"]["port"],
                 # NOTE: I'm disabling heartbeat entirely because its not
                 # relevant to what i'm trying to achieve here
                 heartbeat=0,
@@ -44,10 +57,15 @@ class StockMessagePublisher:
 
     def stop(self): self.connection.close()
 
-app       = Flask(__name__)
-
+app = Flask(__name__)
 publisher = StockMessagePublisher(queueName="stock-message-queue")
-database  = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=0)
+
+def signal_term_handler(_signum, _frame):
+    print("[WARN] Terminating application...")
+    sys.exit()
+
+signal.signal(signal.SIGTERM, signal_term_handler)
+signal.signal(signal.SIGINT, signal_term_handler)
 
 @app.route("/health", methods=["GET"])
 def health(): return { "status": "ok" }
@@ -97,5 +115,5 @@ if __name__ == "__main__":
         }
     })
 
-    serve(app, host=SERVICE_HOST, port=SERVICE_PORT)
+    serve(app, host=worker["config"]["host"], port=worker["config"]["port"])
     publisher.stop()
